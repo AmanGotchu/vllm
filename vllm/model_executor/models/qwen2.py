@@ -383,7 +383,13 @@ class Qwen2Model(nn.Module):
                                         default_weight_loader)
                 loaded_weight = (loaded_weight if loaded_weight.dim() == 0 else
                                  loaded_weight[0])
-                weight_loader(param, loaded_weight)
+                if name == "model.embed_tokens.weight":
+                    if loaded_weight.shape[0] == 151936:
+                        padding = torch.zeros((128, 1024), dtype=loaded_weight.dtype, device=loaded_weight.device)
+                        loaded_weight = torch.cat([loaded_weight, padding], dim=0)
+                    weight_loader(param, loaded_weight)
+                else:
+                    weight_loader(param, loaded_weight)
                 loaded_params.add(scale_name)
                 continue
             for (param_name, weight_name, shard_id) in stacked_params_mapping:
@@ -397,7 +403,13 @@ class Qwen2Model(nn.Module):
                     continue
                 param = params_dict[name]
                 weight_loader = param.weight_loader
-                weight_loader(param, loaded_weight, shard_id)
+                if name == "model.embed_tokens.weight":
+                    if loaded_weight.shape[0] == 151936:
+                        padding = torch.zeros((128, 1024), dtype=loaded_weight.dtype, device=loaded_weight.device)
+                        loaded_weight = torch.cat([loaded_weight, padding], dim=0)
+                    weight_loader(param, loaded_weight)
+                else:
+                    weight_loader(param, loaded_weight)
                 break
             else:
                 # Skip loading extra bias for GPTQ models.
@@ -412,7 +424,13 @@ class Qwen2Model(nn.Module):
                 param = params_dict[name]
                 weight_loader = getattr(param, "weight_loader",
                                         default_weight_loader)
-                weight_loader(param, loaded_weight)
+                if name == "model.embed_tokens.weight":
+                    if loaded_weight.shape[0] == 151936:
+                        padding = torch.zeros((128, 1024), dtype=loaded_weight.dtype, device=loaded_weight.device)
+                        loaded_weight = torch.cat([loaded_weight, padding], dim=0)
+                    weight_loader(param, loaded_weight)
+                else:
+                    weight_loader(param, loaded_weight)
             loaded_params.add(name)
         return loaded_params
 
